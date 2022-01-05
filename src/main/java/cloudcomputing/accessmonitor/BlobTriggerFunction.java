@@ -11,7 +11,7 @@ public class BlobTriggerFunction {
      * This function will be invoked when a new or updated blob is detected at the specified path. The blob contents are provided as input to this function.
      */
     @FunctionName("BlobTrigger")
-    @StorageAccount("AzureStorageAccountConnectionConfig")
+    @StorageAccount("AzureWebJobsStorage")
     public void run(
             @BlobTrigger(name = "content", path = "accessmonitorblob/{filename}", dataType = "binary") byte[] content,
             @BindingName("filename") String filename,
