@@ -5,4 +5,6 @@ import com.microsoft.azure.cognitiveservices.vision.faceapi.models.IdentifyResul
 public interface DetectionService {
 
   void auditDetection(IdentifyResult identifyResult);
+
+  void auditUnauthorizedDetection(IdentifyResult identifyResults);
 }

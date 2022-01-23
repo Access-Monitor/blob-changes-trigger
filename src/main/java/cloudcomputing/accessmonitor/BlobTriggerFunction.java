@@ -2,10 +2,10 @@ package cloudcomputing.accessmonitor;
 
 import static cloudcomputing.accessmonitor.constants.HttpConstants.SUCCESS;
 
-import cloudcomputing.accessmonitor.service.FaceAPIService;
 import cloudcomputing.accessmonitor.service.DetectionService;
-import cloudcomputing.accessmonitor.service.impl.FaceAPIServiceImpl;
+import cloudcomputing.accessmonitor.service.FaceAPIService;
 import cloudcomputing.accessmonitor.service.impl.DetectionServiceImpl;
+import cloudcomputing.accessmonitor.service.impl.FaceAPIServiceImpl;
 import com.google.gson.Gson;
 import com.microsoft.azure.cognitiveservices.vision.faceapi.models.DetectedFace;
 import com.microsoft.azure.cognitiveservices.vision.faceapi.models.IdentifyResult;
@@ -17,6 +17,7 @@ import com.microsoft.azure.functions.annotation.StorageAccount;
 import java.io.IOException;
 import java.net.http.HttpResponse;
 import java.util.Arrays;
+import java.util.Objects;
 import org.apache.commons.lang3.ArrayUtils;
 
 public class BlobTriggerFunction {
@@ -36,19 +37,28 @@ public class BlobTriggerFunction {
       HttpResponse<String> detectFaceHttpResponse = faceAPIService.faceDetect(blobContent);
       if (detectFaceHttpResponse.statusCode() == SUCCESS) {
         DetectedFace[] detectedFaces = new Gson().fromJson(detectFaceHttpResponse.body(), DetectedFace[].class);
-        String[] detectedFaceIds = Arrays.stream(detectedFaces).map(f -> f.faceId().toString()).toArray(String[]::new);
-        HttpResponse<String> identifyHttpResponse = faceAPIService.faceIdentify(detectedFaceIds);
-        IdentifyResult[] identifyResults = new Gson().fromJson(identifyHttpResponse.body(), IdentifyResult[].class);
-        if (ArrayUtils.isNotEmpty(identifyResults)) {
-          Arrays.stream(identifyResults).forEach(detectionService::auditDetection);
-        } else {
-          // not authorized -> send email & register not authorized access
+
+        if (ArrayUtils.isNotEmpty(detectedFaces)) {
+          String[] detectedFaceIds = Arrays.stream(detectedFaces).map(f -> f.faceId().toString()).toArray(String[]::new);
+
+          HttpResponse<String> identifyHttpResponse = faceAPIService.faceIdentify(detectedFaceIds);
+          IdentifyResult[] identifyResults = new Gson().fromJson(identifyHttpResponse.body(), IdentifyResult[].class);
+          Arrays.stream(identifyResults).forEach(this::processIdentificationResults);
         }
       }
     } catch (IOException | InterruptedException e) {
       e.printStackTrace();
+      throw new RuntimeException(e);
     }
 
+  }
+
+  private void processIdentificationResults(IdentifyResult identifyResult) {
+    if (identifyResult.candidates().isEmpty()) {
+      detectionService.auditUnauthorizedDetection(identifyResult);
+    } else {
+      detectionService.auditDetection(identifyResult);
+    }
   }
 
 }
