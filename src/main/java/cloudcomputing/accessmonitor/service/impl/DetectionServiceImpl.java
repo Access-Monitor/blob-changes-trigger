@@ -1,6 +1,8 @@
 package cloudcomputing.accessmonitor.service.impl;
 
-import static cloudcomputing.accessmonitor.constants.FaceAPIConstants.FACE_ID;
+import static cloudcomputing.accessmonitor.constants.FaceAPIConstants.FACE_ID_HEADER;
+import static cloudcomputing.accessmonitor.constants.FaceAPIConstants.FILENAME_HEADER;
+import static cloudcomputing.accessmonitor.constants.HttpConstants.AMPERSAND;
 import static cloudcomputing.accessmonitor.constants.UnauthorizedManagerConstants.UNAUTHORIZED_MNG_ACCESS_KEY;
 import static cloudcomputing.accessmonitor.constants.UnauthorizedManagerConstants.UNAUTHORIZED_MNG_ENDPOINT;
 import static cloudcomputing.accessmonitor.constants.UnauthorizedManagerConstants.X_FUNCTIONS_KEY_HEADER;
@@ -34,10 +36,11 @@ public class DetectionServiceImpl implements DetectionService {
   }
 
   @Override
-  public void auditUnauthorizedDetection(IdentifyResult identifyResults) {
+  public void auditUnauthorizedDetection(IdentifyResult identifyResults, String filename) {
     try {
-      String faceIdQueryParameter = addQueryParam(FACE_ID, identifyResults.faceId().toString());
-      String requestURL = UNAUTHORIZED_MNG_ENDPOINT.concat(faceIdQueryParameter);
+      String faceIdQueryParameter = addQueryParam(FACE_ID_HEADER, identifyResults.faceId().toString());
+      String filenameQueryParameter = addQueryParam(FILENAME_HEADER, filename);
+      String requestURL = UNAUTHORIZED_MNG_ENDPOINT.concat(faceIdQueryParameter).concat(AMPERSAND).concat(filenameQueryParameter);
       HttpRequest httpRequest =
         HttpRequest.newBuilder(URI.create(requestURL)).header(X_FUNCTIONS_KEY_HEADER, UNAUTHORIZED_MNG_ACCESS_KEY).GET().build();
       httpClient.send(httpRequest, BodyHandlers.ofString());

@@ -6,5 +6,5 @@ public interface DetectionService {
 
   void auditDetection(IdentifyResult identifyResult);
 
-  void auditUnauthorizedDetection(IdentifyResult identifyResults);
+  void auditUnauthorizedDetection(IdentifyResult identifyResults, String filename);
 }

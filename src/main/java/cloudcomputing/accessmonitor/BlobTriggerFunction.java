@@ -17,7 +17,6 @@ import com.microsoft.azure.functions.annotation.StorageAccount;
 import java.io.IOException;
 import java.net.http.HttpResponse;
 import java.util.Arrays;
-import java.util.Objects;
 import org.apache.commons.lang3.ArrayUtils;
 
 public class BlobTriggerFunction {
@@ -43,7 +42,7 @@ public class BlobTriggerFunction {
 
           HttpResponse<String> identifyHttpResponse = faceAPIService.faceIdentify(detectedFaceIds);
           IdentifyResult[] identifyResults = new Gson().fromJson(identifyHttpResponse.body(), IdentifyResult[].class);
-          Arrays.stream(identifyResults).forEach(this::processIdentificationResults);
+          Arrays.stream(identifyResults).forEach(identifyResult -> processIdentificationResults(identifyResult, filename));
         }
       }
     } catch (IOException | InterruptedException e) {
@@ -53,9 +52,9 @@ public class BlobTriggerFunction {
 
   }
 
-  private void processIdentificationResults(IdentifyResult identifyResult) {
+  private void processIdentificationResults(IdentifyResult identifyResult, String filename) {
     if (identifyResult.candidates().isEmpty()) {
-      detectionService.auditUnauthorizedDetection(identifyResult);
+      detectionService.auditUnauthorizedDetection(identifyResult, filename);
     } else {
       detectionService.auditDetection(identifyResult);
     }
