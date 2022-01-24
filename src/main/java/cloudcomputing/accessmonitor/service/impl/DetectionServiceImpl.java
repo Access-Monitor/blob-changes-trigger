@@ -1,6 +1,9 @@
 package cloudcomputing.accessmonitor.service.impl;
 
+import static cloudcomputing.accessmonitor.constants.FaceAPIConstants.FACE_ID;
+import static cloudcomputing.accessmonitor.constants.UnauthorizedManagerConstants.UNAUTHORIZED_MNG_ACCESS_KEY;
 import static cloudcomputing.accessmonitor.constants.UnauthorizedManagerConstants.UNAUTHORIZED_MNG_ENDPOINT;
+import static cloudcomputing.accessmonitor.constants.UnauthorizedManagerConstants.X_FUNCTIONS_KEY_HEADER;
 
 import cloudcomputing.accessmonitor.model.persistence.DetectionAuditPerson;
 import cloudcomputing.accessmonitor.service.DetectionService;
@@ -11,7 +14,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
-import java.net.http.HttpResponse.BodyHandler;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -20,7 +22,6 @@ import java.util.Comparator;
 public class DetectionServiceImpl implements DetectionService {
 
   private static final int MIN_TIME_FOR_NOTIFICATION = 20;
-  public static final String FACE_ID = "faceId";
   private final PersistenceService persistenceService = new PersistenceServiceCosmosDBImpl();
   private final HttpClient httpClient = HttpClient.newHttpClient();
 
@@ -37,16 +38,13 @@ public class DetectionServiceImpl implements DetectionService {
     try {
       String faceIdQueryParameter = addQueryParam(FACE_ID, identifyResults.faceId().toString());
       String requestURL = UNAUTHORIZED_MNG_ENDPOINT.concat(faceIdQueryParameter);
-      HttpRequest httpRequest = HttpRequest.newBuilder(URI.create(requestURL)).GET().build();
+      HttpRequest httpRequest =
+        HttpRequest.newBuilder(URI.create(requestURL)).header(X_FUNCTIONS_KEY_HEADER, UNAUTHORIZED_MNG_ACCESS_KEY).GET().build();
       httpClient.send(httpRequest, BodyHandlers.ofString());
     } catch (IOException | InterruptedException e) {
       e.printStackTrace();
       throw new RuntimeException(e);
     }
-  }
-
-  private String addQueryParam(String key, String value) {
-    return String.format("?%s=%s", key, value);
   }
 
   private void registerCandidate(IdentifyResult identifyResult, IdentifyCandidate candidate) {
@@ -67,6 +65,10 @@ public class DetectionServiceImpl implements DetectionService {
     if (elapsedMinutesSinceLastDetection > MIN_TIME_FOR_NOTIFICATION) {
       persistenceService.createDetection(actualDetection);
     }
+  }
+
+  private String addQueryParam(String key, String value) {
+    return String.format("?%s=%s", key, value);
   }
 
 }
