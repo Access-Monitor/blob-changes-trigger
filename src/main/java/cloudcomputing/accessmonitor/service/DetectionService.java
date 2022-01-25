@@ -6,5 +6,5 @@ public interface DetectionService {
 
   void auditDetection(IdentifyResult identifyResult);
 
-  void auditUnauthorizedDetection(IdentifyResult identifyResults, String filename);
+  void auditUnauthorizedDetection(IdentifyResult identifyResults, byte[] blobContent, String filename);
 }

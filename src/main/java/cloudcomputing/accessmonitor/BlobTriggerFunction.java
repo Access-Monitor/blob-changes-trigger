@@ -42,7 +42,8 @@ public class BlobTriggerFunction {
 
           HttpResponse<String> identifyHttpResponse = faceAPIService.faceIdentify(detectedFaceIds);
           IdentifyResult[] identifyResults = new Gson().fromJson(identifyHttpResponse.body(), IdentifyResult[].class);
-          Arrays.stream(identifyResults).forEach(identifyResult -> processIdentificationResults(identifyResult, filename));
+          Arrays.stream(identifyResults)
+            .forEach(identifyResult -> processIdentificationResults(identifyResult, blobContent, filename));
         }
       }
     } catch (IOException | InterruptedException e) {
@@ -52,9 +53,9 @@ public class BlobTriggerFunction {
 
   }
 
-  private void processIdentificationResults(IdentifyResult identifyResult, String filename) {
+  private void processIdentificationResults(IdentifyResult identifyResult, byte[] blobContent, String filename) {
     if (identifyResult.candidates().isEmpty()) {
-      detectionService.auditUnauthorizedDetection(identifyResult, filename);
+      detectionService.auditUnauthorizedDetection(identifyResult, blobContent, filename);
     } else {
       detectionService.auditDetection(identifyResult);
     }
