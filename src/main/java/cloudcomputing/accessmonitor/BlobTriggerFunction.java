@@ -36,16 +36,21 @@ public class BlobTriggerFunction {
       HttpResponse<String> detectFaceHttpResponse = faceAPIService.faceDetect(blobContent);
       if (detectFaceHttpResponse.statusCode() == SUCCESS) {
         DetectedFace[] detectedFaces = new Gson().fromJson(detectFaceHttpResponse.body(), DetectedFace[].class);
+        context.getLogger().info(String.format("Detected faces from blob: %s", Arrays.toString(detectedFaces)));
 
         if (ArrayUtils.isNotEmpty(detectedFaces)) {
           String[] detectedFaceIds = Arrays.stream(detectedFaces).map(f -> f.faceId().toString()).toArray(String[]::new);
+          context.getLogger().info(String.format("Detected face IDs: %s", Arrays.toString(detectedFaceIds)));
 
           HttpResponse<String> identifyHttpResponse = faceAPIService.faceIdentify(detectedFaceIds);
           IdentifyResult[] identifyResults = new Gson().fromJson(identifyHttpResponse.body(), IdentifyResult[].class);
+          context.getLogger().info(String.format("Identification results: %s", Arrays.toString(identifyResults)));
           Arrays.stream(identifyResults)
             .forEach(identifyResult -> processIdentificationResults(identifyResult, blobContent, filename));
         }
+        context.getLogger().info("No faces detected from blob");
       }
+      context.getLogger().info("Error while processing face detection from blob");
     } catch (IOException | InterruptedException e) {
       e.printStackTrace();
       throw new RuntimeException(e);
