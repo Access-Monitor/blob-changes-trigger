@@ -47,11 +47,13 @@ public class BlobTriggerFunction {
           context.getLogger().info(String.format("Identification results: %s", Arrays.toString(identifyResults)));
           Arrays.stream(identifyResults)
             .forEach(identifyResult -> processIdentificationResults(identifyResult, blobContent, filename));
+        } else {
+          context.getLogger().info("No faces detected from blob");
         }
-        context.getLogger().info("No faces detected from blob");
+      } else {
+        context.getLogger()
+          .info(String.format("Error while processing face detection from blob: %s", detectFaceHttpResponse.statusCode()));
       }
-      context.getLogger()
-        .info(String.format("Error while processing face detection from blob: %s", detectFaceHttpResponse.statusCode()));
     } catch (IOException | InterruptedException e) {
       e.printStackTrace();
       throw new RuntimeException(e);
