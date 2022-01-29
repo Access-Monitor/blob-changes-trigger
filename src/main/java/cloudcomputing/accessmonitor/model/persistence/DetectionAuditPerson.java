@@ -58,16 +58,16 @@ public class DetectionAuditPerson {
     return confidence;
   }
 
-  public LocalDateTime getDetectionTime() {
-    return detectionTime;
-  }
-
   public void setId(String id) {
     this.id = id;
   }
 
   public void setConfidence(double confidence) {
     this.confidence = confidence;
+  }
+
+  public LocalDateTime getDetectionTime() {
+    return detectionTime;
   }
 
   public void setDetectionTime(LocalDateTime detectionTime) {

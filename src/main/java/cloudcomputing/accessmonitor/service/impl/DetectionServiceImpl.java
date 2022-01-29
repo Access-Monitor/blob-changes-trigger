@@ -19,6 +19,7 @@ import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Comparator;
 
 public class DetectionServiceImpl implements DetectionService {
@@ -54,7 +55,7 @@ public class DetectionServiceImpl implements DetectionService {
   private void registerCandidate(IdentifyResult identifyResult, IdentifyCandidate candidate, byte[] blobContent) {
     DetectionAuditPerson actualDetection =
       new DetectionAuditPerson(identifyResult.faceId().toString(), candidate.personId().toString(), candidate.confidence(),
-        LocalDateTime.now(), blobContent);
+        LocalDateTime.now(ZoneOffset.UTC), blobContent);
 
     persistenceService.lastDetectionByPersonID(actualDetection.getPersonId())
       .stream()
