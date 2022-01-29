@@ -28,11 +28,11 @@ public class DetectionServiceImpl implements DetectionService {
   private final HttpClient httpClient = HttpClient.newHttpClient();
 
   @Override
-  public void auditDetection(IdentifyResult identifyResult) {
+  public void auditDetection(IdentifyResult identifyResult, byte[] blobContent) {
     identifyResult.candidates()
       .stream()
       .max(Comparator.comparing(IdentifyCandidate::confidence))
-      .ifPresent(candidate -> registerCandidate(identifyResult, candidate));
+      .ifPresent(candidate -> registerCandidate(identifyResult, candidate, blobContent));
   }
 
   @Override
@@ -51,10 +51,10 @@ public class DetectionServiceImpl implements DetectionService {
     }
   }
 
-  private void registerCandidate(IdentifyResult identifyResult, IdentifyCandidate candidate) {
+  private void registerCandidate(IdentifyResult identifyResult, IdentifyCandidate candidate, byte[] blobContent) {
     DetectionAuditPerson actualDetection =
       new DetectionAuditPerson(identifyResult.faceId().toString(), candidate.personId().toString(), candidate.confidence(),
-        LocalDateTime.now());
+        LocalDateTime.now(), blobContent);
 
     persistenceService.lastDetectionByPersonID(actualDetection.getPersonId())
       .stream()
