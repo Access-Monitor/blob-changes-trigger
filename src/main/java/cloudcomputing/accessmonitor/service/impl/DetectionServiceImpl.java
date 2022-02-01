@@ -17,9 +17,11 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Base64;
 import java.util.Comparator;
 
 public class DetectionServiceImpl implements DetectionService {
@@ -40,7 +42,8 @@ public class DetectionServiceImpl implements DetectionService {
   public void auditUnauthorizedDetection(IdentifyResult identifyResults, byte[] blobContent, String filename) {
     try {
       UnauthorizedDetectionRequestBody unauthorizedDetectionRequestBody =
-        new UnauthorizedDetectionRequestBody(filename, identifyResults.faceId().toString(), blobContent);
+        new UnauthorizedDetectionRequestBody(filename, identifyResults.faceId().toString(),
+          new String(Base64.getEncoder().encode(blobContent), StandardCharsets.UTF_8));
       HttpRequest httpRequest = HttpRequest.newBuilder(URI.create(UNAUTHORIZED_MNG_ENDPOINT))
         .header(X_FUNCTIONS_KEY_HEADER, UNAUTHORIZED_MNG_ACCESS_KEY)
         .POST(BodyPublishers.ofString(new Gson().toJson(unauthorizedDetectionRequestBody)))
@@ -55,7 +58,7 @@ public class DetectionServiceImpl implements DetectionService {
   private void registerCandidate(IdentifyResult identifyResult, IdentifyCandidate candidate, byte[] blobContent) {
     DetectionAuditPerson actualDetection =
       new DetectionAuditPerson(identifyResult.faceId().toString(), candidate.personId().toString(), candidate.confidence(),
-        LocalDateTime.now(ZoneOffset.UTC), blobContent);
+        LocalDateTime.now(ZoneOffset.UTC), new String(Base64.getEncoder().encode(blobContent), StandardCharsets.UTF_8));
 
     persistenceService.lastDetectionByPersonID(actualDetection.getPersonId())
       .stream()

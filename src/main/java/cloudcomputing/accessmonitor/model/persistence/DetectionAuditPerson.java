@@ -16,9 +16,9 @@ public class DetectionAuditPerson {
   @JsonSerialize(using = LocalDateTimeSerializer.class)
   private LocalDateTime detectionTime;
   private long detectionTimestamp;
-  private byte[] blobContent;
+  private String blobContent;
 
-  public DetectionAuditPerson(String id, String personId, double confidence, LocalDateTime detectionTime, byte[] blobContent) {
+  public DetectionAuditPerson(String id, String personId, double confidence, LocalDateTime detectionTime, String blobContent) {
     this.id = id;
     this.personId = personId;
     this.confidence = confidence;
@@ -34,11 +34,11 @@ public class DetectionAuditPerson {
     return detectionTimestamp;
   }
 
-  public byte[] getBlobContent() {
+  public String getBlobContent() {
     return blobContent;
   }
 
-  public void setBlobContent(byte[] blobContent) {
+  public void setBlobContent(String blobContent) {
     this.blobContent = blobContent;
   }
 

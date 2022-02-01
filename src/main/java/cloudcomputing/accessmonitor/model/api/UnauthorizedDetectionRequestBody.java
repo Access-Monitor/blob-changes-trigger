@@ -4,9 +4,9 @@ public class UnauthorizedDetectionRequestBody {
 
   private String id;
   private String faceId;
-  private byte[] blobContent;
+  private String blobContent;
 
-  public UnauthorizedDetectionRequestBody(String id, String faceId, byte[] blobContent) {
+  public UnauthorizedDetectionRequestBody(String id, String faceId, String blobContent) {
     this.faceId = faceId;
     this.blobContent = blobContent;
     this.id = id;
@@ -31,11 +31,11 @@ public class UnauthorizedDetectionRequestBody {
     this.faceId = faceId;
   }
 
-  public byte[] getBlobContent() {
+  public String getBlobContent() {
     return blobContent;
   }
 
-  public void setBlobContent(byte[] blobContent) {
+  public void setBlobContent(String blobContent) {
     this.blobContent = blobContent;
   }
 }
