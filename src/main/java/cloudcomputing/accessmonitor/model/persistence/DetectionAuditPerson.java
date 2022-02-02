@@ -17,17 +17,28 @@ public class DetectionAuditPerson {
   private LocalDateTime detectionTime;
   private long detectionTimestamp;
   private String blobContent;
+  private String filename;
 
-  public DetectionAuditPerson(String id, String personId, double confidence, LocalDateTime detectionTime, String blobContent) {
+  public DetectionAuditPerson(String id, String personId, double confidence, LocalDateTime detectionTime, String blobContent,
+    String filename) {
     this.id = id;
     this.personId = personId;
     this.confidence = confidence;
     this.detectionTime = detectionTime;
     this.detectionTimestamp = Timestamp.valueOf(detectionTime).getTime();
     this.blobContent = blobContent;
+    this.filename = filename;
   }
 
   public DetectionAuditPerson() {
+  }
+
+  public String getFilename() {
+    return filename;
+  }
+
+  public void setFilename(String filename) {
+    this.filename = filename;
   }
 
   public long getDetectionTimestamp() {
