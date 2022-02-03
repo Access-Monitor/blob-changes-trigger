@@ -38,6 +38,6 @@ jobs:
         with:
           app-name: 'blob-edit-trigger'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_E2A7CC938A0C45DBB235F626104DF218 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_560FFB62C0144FA69399B651254120DD }}
           package: '${{ env.PACKAGE_DIRECTORY }}'
           respect-pom-xml: true
