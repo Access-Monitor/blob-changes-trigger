@@ -17,6 +17,7 @@ import com.microsoft.azure.functions.annotation.StorageAccount;
 import java.io.IOException;
 import java.net.http.HttpResponse;
 import java.util.Arrays;
+import java.util.logging.Logger;
 import org.apache.commons.lang3.ArrayUtils;
 
 public class BlobTriggerFunction {
@@ -29,30 +30,29 @@ public class BlobTriggerFunction {
   public void run(@BlobTrigger(name = "blobContent", path = "accessmonitorblob/{filename}", dataType = "binary") byte[] blobContent,
     @BindingName("filename") String filename, final ExecutionContext context) {
 
-    context.getLogger()
-      .info("Java Blob trigger function processed a blob. Name: " + filename + "\n  Size: " + blobContent.length + " Bytes");
+    Logger logger = context.getLogger();
+    logger.info("Java Blob trigger function processed a blob. Name: " + filename + "\n  Size: " + blobContent.length + " Bytes");
 
     try {
       HttpResponse<String> detectFaceHttpResponse = faceAPIService.faceDetect(blobContent);
       if (detectFaceHttpResponse.statusCode() == SUCCESS) {
         DetectedFace[] detectedFaces = new Gson().fromJson(detectFaceHttpResponse.body(), DetectedFace[].class);
-        context.getLogger().info(String.format("Detected faces from blob: %s", Arrays.toString(detectedFaces)));
+        logger.info(String.format("Detected faces from blob: %s", Arrays.toString(detectedFaces)));
 
         if (ArrayUtils.isNotEmpty(detectedFaces)) {
           String[] detectedFaceIds = Arrays.stream(detectedFaces).map(f -> f.faceId().toString()).toArray(String[]::new);
-          context.getLogger().info(String.format("Detected face IDs: %s", Arrays.toString(detectedFaceIds)));
+          logger.info(String.format("Detected face IDs: %s", Arrays.toString(detectedFaceIds)));
 
           HttpResponse<String> identifyHttpResponse = faceAPIService.faceIdentify(detectedFaceIds);
           IdentifyResult[] identifyResults = new Gson().fromJson(identifyHttpResponse.body(), IdentifyResult[].class);
-          context.getLogger().info(String.format("Identification results: %s", Arrays.toString(identifyResults)));
+          logger.info(String.format("Identification results: %s", Arrays.toString(identifyResults)));
           Arrays.stream(identifyResults)
             .forEach(identifyResult -> processIdentificationResults(identifyResult, blobContent, filename));
         } else {
-          context.getLogger().info("No faces detected from blob");
+          logger.info("No faces detected from blob");
         }
       } else {
-        context.getLogger()
-          .info(String.format("Error while processing face detection from blob: %s", detectFaceHttpResponse.statusCode()));
+        logger.info(String.format("Error while processing face detection from blob: %s", detectFaceHttpResponse.statusCode()));
       }
     } catch (IOException | InterruptedException e) {
       e.printStackTrace();
