@@ -7,7 +7,7 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
-public class DetectionAuditPerson {
+public class AuthorizedDetection {
 
   private String id;
   private String personId;
@@ -16,21 +16,18 @@ public class DetectionAuditPerson {
   @JsonSerialize(using = LocalDateTimeSerializer.class)
   private LocalDateTime detectionTime;
   private long detectionTimestamp;
-  private String blobContent;
   private String filename;
 
-  public DetectionAuditPerson(String id, String personId, double confidence, LocalDateTime detectionTime, String blobContent,
-    String filename) {
+  public AuthorizedDetection(String id, String personId, double confidence, LocalDateTime detectionTime, String filename) {
     this.id = id;
     this.personId = personId;
     this.confidence = confidence;
     this.detectionTime = detectionTime;
     this.detectionTimestamp = Timestamp.valueOf(detectionTime).getTime();
-    this.blobContent = blobContent;
     this.filename = filename;
   }
 
-  public DetectionAuditPerson() {
+  public AuthorizedDetection() {
   }
 
   public String getFilename() {
@@ -43,14 +40,6 @@ public class DetectionAuditPerson {
 
   public long getDetectionTimestamp() {
     return detectionTimestamp;
-  }
-
-  public String getBlobContent() {
-    return blobContent;
-  }
-
-  public void setBlobContent(String blobContent) {
-    this.blobContent = blobContent;
   }
 
   public String getPersonId() {
