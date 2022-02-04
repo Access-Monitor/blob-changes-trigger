@@ -8,4 +8,6 @@ public interface FaceAPIService {
   HttpResponse<String> faceDetect(byte[] blobContent) throws IOException, InterruptedException;
 
   HttpResponse<String> faceIdentify(String[] detectedFaceIds) throws IOException, InterruptedException;
+
+  HttpResponse<String> faceVerify(String faceId1, String faceId2);
 }

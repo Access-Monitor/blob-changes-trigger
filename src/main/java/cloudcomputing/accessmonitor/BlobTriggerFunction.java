@@ -47,7 +47,7 @@ public class BlobTriggerFunction {
           IdentifyResult[] identifyResults = new Gson().fromJson(identifyHttpResponse.body(), IdentifyResult[].class);
           logger.info(String.format("Identification results: %s", Arrays.toString(identifyResults)));
           Arrays.stream(identifyResults)
-            .forEach(identifyResult -> processIdentificationResults(identifyResult, blobContent, filename));
+            .forEach(identifyResult -> processIdentificationResults(identifyResult, filename, logger));
         } else {
           logger.info("No faces detected from blob");
         }
@@ -61,11 +61,11 @@ public class BlobTriggerFunction {
 
   }
 
-  private void processIdentificationResults(IdentifyResult identifyResult, byte[] blobContent, String filename) {
+  private void processIdentificationResults(IdentifyResult identifyResult, String filename, Logger logger) {
     if (identifyResult.candidates().isEmpty()) {
-      detectionService.auditUnauthorizedDetection(identifyResult, blobContent, filename);
+      detectionService.auditUnauthorizedDetection(filename, identifyResult.faceId().toString(), logger);
     } else {
-      detectionService.auditDetection(identifyResult, blobContent, filename);
+      detectionService.auditAuthorizedDetection(identifyResult, filename);
     }
   }
 

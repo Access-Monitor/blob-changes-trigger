@@ -1,10 +1,11 @@
 package cloudcomputing.accessmonitor.service;
 
 import com.microsoft.azure.cognitiveservices.vision.faceapi.models.IdentifyResult;
+import java.util.logging.Logger;
 
 public interface DetectionService {
 
-  void auditDetection(IdentifyResult identifyResult, byte[] blobContent, String filename);
+  void auditAuthorizedDetection(IdentifyResult identifyResult, String filename);
 
-  void auditUnauthorizedDetection(IdentifyResult identifyResults, byte[] blobContent, String filename);
+  void auditUnauthorizedDetection(String filename, String faceId, Logger logger);
 }
