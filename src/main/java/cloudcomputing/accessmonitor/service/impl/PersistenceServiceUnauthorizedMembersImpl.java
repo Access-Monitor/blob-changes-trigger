@@ -1,10 +1,10 @@
 package cloudcomputing.accessmonitor.service.impl;
 
-import static cloudcomputing.accessmonitor.constants.DatabaseConstants.COSMOSDB_ENDPOINT;
-import static cloudcomputing.accessmonitor.constants.DatabaseConstants.COSMOSDB_SUBSCRIPTION_KEY;
-import static cloudcomputing.accessmonitor.constants.DatabaseConstants.DATABASE_NAME;
-import static cloudcomputing.accessmonitor.constants.DatabaseConstants.MIN_TIME_FOR_NOTIFICATION;
-import static cloudcomputing.accessmonitor.constants.DatabaseConstants.UNAUTHORIZED_CONTAINER_NAME;
+import static cloudcomputing.accessmonitor.constants.StorageConstants.COSMOSDB_ENDPOINT;
+import static cloudcomputing.accessmonitor.constants.StorageConstants.COSMOSDB_SUBSCRIPTION_KEY;
+import static cloudcomputing.accessmonitor.constants.StorageConstants.DATABASE_NAME;
+import static cloudcomputing.accessmonitor.constants.StorageConstants.MIN_TIME_FOR_NOTIFICATION;
+import static cloudcomputing.accessmonitor.constants.StorageConstants.UNAUTHORIZED_CONTAINER_NAME;
 
 import cloudcomputing.accessmonitor.model.persistence.UnauthorizedDetection;
 import cloudcomputing.accessmonitor.service.PersistenceServiceUnauthorizedMembers;

@@ -5,7 +5,7 @@ import java.util.logging.Logger;
 
 public interface DetectionService {
 
-  void auditAuthorizedDetection(IdentifyResult identifyResult, String filename);
+  void auditAuthorizedDetection(IdentifyResult identifyResult, String filename, Logger logger);
 
   void auditUnauthorizedDetection(String filename, String faceId, Logger logger);
 }

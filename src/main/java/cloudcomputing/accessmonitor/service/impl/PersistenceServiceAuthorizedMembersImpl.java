@@ -1,9 +1,9 @@
 package cloudcomputing.accessmonitor.service.impl;
 
-import static cloudcomputing.accessmonitor.constants.DatabaseConstants.AUDIT_CONTAINER_NAME;
-import static cloudcomputing.accessmonitor.constants.DatabaseConstants.COSMOSDB_ENDPOINT;
-import static cloudcomputing.accessmonitor.constants.DatabaseConstants.COSMOSDB_SUBSCRIPTION_KEY;
-import static cloudcomputing.accessmonitor.constants.DatabaseConstants.DATABASE_NAME;
+import static cloudcomputing.accessmonitor.constants.StorageConstants.AUDIT_CONTAINER_NAME;
+import static cloudcomputing.accessmonitor.constants.StorageConstants.COSMOSDB_ENDPOINT;
+import static cloudcomputing.accessmonitor.constants.StorageConstants.COSMOSDB_SUBSCRIPTION_KEY;
+import static cloudcomputing.accessmonitor.constants.StorageConstants.DATABASE_NAME;
 
 import cloudcomputing.accessmonitor.model.persistence.AuthorizedDetection;
 import cloudcomputing.accessmonitor.service.PersistenceServiceAuthorizedMembers;

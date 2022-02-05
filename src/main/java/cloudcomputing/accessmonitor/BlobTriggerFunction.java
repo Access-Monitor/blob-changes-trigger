@@ -65,7 +65,7 @@ public class BlobTriggerFunction {
     if (identifyResult.candidates().isEmpty()) {
       detectionService.auditUnauthorizedDetection(filename, identifyResult.faceId().toString(), logger);
     } else {
-      detectionService.auditAuthorizedDetection(identifyResult, filename);
+      detectionService.auditAuthorizedDetection(identifyResult, filename, logger);
     }
   }
 
