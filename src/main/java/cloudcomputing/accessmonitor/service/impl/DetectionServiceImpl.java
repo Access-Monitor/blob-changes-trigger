@@ -68,7 +68,7 @@ public class DetectionServiceImpl implements DetectionService {
       new UnauthorizedDetection(filename, faceId, LocalDateTime.now(ZoneOffset.UTC), filename);
 
     faceAlreadyNotified.ifPresentOrElse(face -> {
-      logger.log(Level.WARNING, String.format("FaceId %s has been already notified", face));
+      logger.log(Level.WARNING, String.format("FaceId %s has been already notified", faceId));
       deleteBlob(filename, logger);
     }, () -> {
       registerUnauthorizedDetection(unauthorizedDetection, logger);
