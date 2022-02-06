@@ -46,8 +46,7 @@ public class BlobTriggerFunction {
           HttpResponse<String> identifyHttpResponse = faceAPIService.faceIdentify(detectedFaceIds);
           IdentifyResult[] identifyResults = new Gson().fromJson(identifyHttpResponse.body(), IdentifyResult[].class);
           logger.info(String.format("Identification results: %s", Arrays.toString(identifyResults)));
-          Arrays.stream(identifyResults)
-            .forEach(identifyResult -> processIdentificationResults(identifyResult, filename, logger));
+          Arrays.stream(identifyResults).forEach(identifyResult -> processIdentificationResults(identifyResult, filename, logger));
         } else {
           logger.info("No faces detected from blob");
         }

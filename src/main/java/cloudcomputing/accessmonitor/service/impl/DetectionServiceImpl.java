@@ -30,6 +30,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -65,7 +66,7 @@ public class DetectionServiceImpl implements DetectionService {
       }).filter(identical -> identical).findAny();
 
     UnauthorizedDetection unauthorizedDetection =
-      new UnauthorizedDetection(filename, faceId, LocalDateTime.now(ZoneOffset.UTC), filename);
+      new UnauthorizedDetection(UUID.randomUUID().toString(), faceId, LocalDateTime.now(ZoneOffset.UTC), filename);
 
     faceAlreadyNotified.ifPresentOrElse(face -> {
       logger.log(Level.WARNING, String.format("FaceId %s has been already notified", faceId));
