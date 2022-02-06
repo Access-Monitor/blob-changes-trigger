@@ -1,18 +1,16 @@
 package cloudcomputing.accessmonitor.service.impl;
 
-import static cloudcomputing.accessmonitor.constants.StorageConstants.ACCESSMONITORBLOB_CONTAINER;
 import static cloudcomputing.accessmonitor.constants.UnauthorizedManagerConstants.UNAUTHORIZED_MNG_ACCESS_KEY;
 import static cloudcomputing.accessmonitor.constants.UnauthorizedManagerConstants.UNAUTHORIZED_MNG_ENDPOINT;
 import static cloudcomputing.accessmonitor.constants.UnauthorizedManagerConstants.X_FUNCTIONS_KEY_HEADER;
 
+import cloudcomputing.accessmonitor.exception.RollbackBlobException;
 import cloudcomputing.accessmonitor.model.persistence.AuthorizedDetection;
 import cloudcomputing.accessmonitor.model.persistence.UnauthorizedDetection;
-import cloudcomputing.accessmonitor.service.BlobStorageService;
 import cloudcomputing.accessmonitor.service.DetectionService;
 import cloudcomputing.accessmonitor.service.FaceAPIService;
 import cloudcomputing.accessmonitor.service.PersistenceServiceAuthorizedMembers;
 import cloudcomputing.accessmonitor.service.PersistenceServiceUnauthorizedMembers;
-import com.azure.core.http.rest.Response;
 import com.azure.cosmos.models.CosmosItemResponse;
 import com.google.gson.Gson;
 import com.microsoft.azure.cognitiveservices.vision.faceapi.models.IdentifyCandidate;
@@ -42,22 +40,28 @@ public class DetectionServiceImpl implements DetectionService {
   private final PersistenceServiceUnauthorizedMembers persistenceServiceUnauthorizedMembers =
     new PersistenceServiceUnauthorizedMembersImpl();
   private final FaceAPIService faceAPIService = new FaceAPIServiceImpl();
-  private final BlobStorageService blobStorageService = new BlobStorageServiceImpl();
   private final HttpClient httpClient = HttpClient.newHttpClient();
 
   @Override
   public void auditAuthorizedDetection(IdentifyResult identifyResult, String filename, Logger logger) {
-    identifyResult.candidates()
-      .stream()
-      .max(Comparator.comparing(IdentifyCandidate::confidence))
-      .ifPresent(candidate -> registerAuthorizedDetection(identifyResult, candidate, filename, logger));
+    try {
+      identifyResult.candidates()
+        .stream()
+        .max(Comparator.comparing(IdentifyCandidate::confidence))
+        .ifPresent(candidate -> registerAuthorizedDetection(identifyResult, candidate, filename, logger));
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new RollbackBlobException(e);
+    }
   }
 
   @Override
   public void auditUnauthorizedDetection(String filename, String faceId, Logger logger) {
 
-    Optional<Boolean> faceAlreadyNotified =
-      persistenceServiceUnauthorizedMembers.lastNotifiedDetections().stream().map(notifiedDetection -> {
+    Optional<Boolean> faceAlreadyNotified;
+    UnauthorizedDetection unauthorizedDetection;
+    try {
+      faceAlreadyNotified = persistenceServiceUnauthorizedMembers.lastNotifiedDetections().stream().map(notifiedDetection -> {
         logger.info(String.format("Notified detection in past %s minutes found: faceId %s, filename %s", MIN_TIME_FOR_NOTIFICATION,
           notifiedDetection.getFaceId(), notifiedDetection.getId()));
 
@@ -65,12 +69,16 @@ public class DetectionServiceImpl implements DetectionService {
         return new Gson().fromJson(verifyResponse.body(), VerifyResult.class).isIdentical();
       }).filter(identical -> identical).findAny();
 
-    UnauthorizedDetection unauthorizedDetection =
-      new UnauthorizedDetection(UUID.randomUUID().toString(), faceId, LocalDateTime.now(ZoneOffset.UTC), filename);
+      unauthorizedDetection =
+        new UnauthorizedDetection(UUID.randomUUID().toString(), faceId, LocalDateTime.now(ZoneOffset.UTC), filename);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new RollbackBlobException(e);
+    }
 
     faceAlreadyNotified.ifPresentOrElse(face -> {
       logger.log(Level.WARNING, String.format("FaceId %s has been already notified", faceId));
-      deleteBlob(filename, logger);
+      throw new RollbackBlobException();
     }, () -> {
       registerUnauthorizedDetection(unauthorizedDetection, logger);
       emailNotifyUnauthorizedDetection(unauthorizedDetection);
@@ -95,17 +103,21 @@ public class DetectionServiceImpl implements DetectionService {
     if (elapsedMinutesSinceLastDetection > MIN_TIME_FOR_NOTIFICATION) {
       persistenceServiceAuthorizedMembers.createDetection(actualDetection);
     } else {
-      deleteBlob(actualDetection.getFilename(), logger);
       logger.log(Level.WARNING,
         String.format("Authorized detection already registered %s minutes ago", elapsedMinutesSinceLastDetection));
+      throw new RollbackBlobException();
     }
   }
 
   private void registerUnauthorizedDetection(UnauthorizedDetection unauthorizedDetection, Logger logger) {
-    CosmosItemResponse<UnauthorizedDetection> createDetectionResponse =
-      persistenceServiceUnauthorizedMembers.createDetection(unauthorizedDetection);
-    logger.log(Level.INFO,
-      String.format("Registered UNAUTHORIZED detection with status: %s", createDetectionResponse.getStatusCode()));
+    try {
+      CosmosItemResponse<UnauthorizedDetection> createDetectionResponse =
+        persistenceServiceUnauthorizedMembers.createDetection(unauthorizedDetection);
+      logger.log(Level.INFO,
+        String.format("Registered UNAUTHORIZED detection with status: %s", createDetectionResponse.getStatusCode()));
+    } catch (Exception e) {
+      throw new RollbackBlobException(e);
+    }
   }
 
   private void emailNotifyUnauthorizedDetection(UnauthorizedDetection unauthorizedDetection) {
@@ -121,8 +133,4 @@ public class DetectionServiceImpl implements DetectionService {
     }
   }
 
-  private void deleteBlob(String filename, Logger logger) {
-    Response<Void> deleteResponse = blobStorageService.deleteBlob(filename, ACCESSMONITORBLOB_CONTAINER);
-    logger.log(Level.WARNING, String.format("Delete blob %s with response status %s", filename, deleteResponse.getStatusCode()));
-  }
 }

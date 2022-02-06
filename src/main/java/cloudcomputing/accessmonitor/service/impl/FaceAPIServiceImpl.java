@@ -7,6 +7,7 @@ import static cloudcomputing.accessmonitor.constants.HttpConstants.APPLICATION_O
 import static cloudcomputing.accessmonitor.constants.HttpConstants.CONTENT_TYPE_HEADER;
 import static cloudcomputing.accessmonitor.constants.HttpConstants.OCP_APIM_SUBSCRIPTION_KEY_HEADER;
 
+import cloudcomputing.accessmonitor.exception.RollbackBlobException;
 import cloudcomputing.accessmonitor.model.api.FaceIdentifyRequestBody;
 import cloudcomputing.accessmonitor.model.api.FaceVerifyRequestBody;
 import cloudcomputing.accessmonitor.service.FaceAPIService;
@@ -26,21 +27,31 @@ public class FaceAPIServiceImpl implements FaceAPIService {
   private final HttpClient httpClient = HttpClient.newHttpClient();
 
   @Override
-  public HttpResponse<String> faceDetect(byte[] blobContent) throws IOException, InterruptedException {
-    HttpRequest httpRequest =
-      buildBaseFaceAPIHttpRequest(FACE_API_BASE_ENDPOINT + "/face/v1.0/detect?recognitionModel=recognition_04").header(
-        CONTENT_TYPE_HEADER, APPLICATION_OCTET_STREAM).POST(BodyPublishers.ofByteArray(blobContent)).build();
-    return httpClient.send(httpRequest, BodyHandlers.ofString());
+  public HttpResponse<String> faceDetect(byte[] blobContent) {
+    try {
+      HttpRequest httpRequest =
+        buildBaseFaceAPIHttpRequest(FACE_API_BASE_ENDPOINT + "/face/v1.0/detect?recognitionModel=recognition_04").header(
+          CONTENT_TYPE_HEADER, APPLICATION_OCTET_STREAM).POST(BodyPublishers.ofByteArray(blobContent)).build();
+      return httpClient.send(httpRequest, BodyHandlers.ofString());
+    } catch (IOException | InterruptedException e) {
+      e.printStackTrace();
+      throw new RollbackBlobException(e);
+    }
   }
 
   @Override
-  public HttpResponse<String> faceIdentify(String[] detectedFaceIds) throws IOException, InterruptedException {
+  public HttpResponse<String> faceIdentify(String[] detectedFaceIds) {
     if (ArrayUtils.isNotEmpty(detectedFaceIds)) {
-      FaceIdentifyRequestBody faceIdentifyRequestBody = new FaceIdentifyRequestBody(detectedFaceIds, 1, TEST_PERSON_GROUP);
-      String faceIdentifyRequestBodyJSON = new Gson().toJson(faceIdentifyRequestBody, FaceIdentifyRequestBody.class);
-      HttpRequest httpRequest = buildBaseFaceAPIHttpRequest(FACE_API_BASE_ENDPOINT + "/face/v1.0/identify").POST(
-        BodyPublishers.ofString(faceIdentifyRequestBodyJSON)).build();
-      return httpClient.send(httpRequest, BodyHandlers.ofString());
+      try {
+        FaceIdentifyRequestBody faceIdentifyRequestBody = new FaceIdentifyRequestBody(detectedFaceIds, 1, TEST_PERSON_GROUP);
+        String faceIdentifyRequestBodyJSON = new Gson().toJson(faceIdentifyRequestBody, FaceIdentifyRequestBody.class);
+        HttpRequest httpRequest = buildBaseFaceAPIHttpRequest(FACE_API_BASE_ENDPOINT + "/face/v1.0/identify").POST(
+          BodyPublishers.ofString(faceIdentifyRequestBodyJSON)).build();
+        return httpClient.send(httpRequest, BodyHandlers.ofString());
+      } catch (IOException | InterruptedException e) {
+        e.printStackTrace();
+        throw new RollbackBlobException(e);
+      }
     }
     return null;
   }
