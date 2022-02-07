@@ -17,17 +17,28 @@ public class AuthorizedDetection {
   private LocalDateTime detectionTime;
   private long detectionTimestamp;
   private String filename;
+  private String name;
 
-  public AuthorizedDetection(String id, String personId, double confidence, LocalDateTime detectionTime, String filename) {
+  public AuthorizedDetection(String id, String personId, double confidence, LocalDateTime detectionTime, String filename,
+    String name) {
     this.id = id;
     this.personId = personId;
     this.confidence = confidence;
     this.detectionTime = detectionTime;
     this.detectionTimestamp = Timestamp.valueOf(detectionTime).getTime();
     this.filename = filename;
+    this.name = name;
   }
 
   public AuthorizedDetection() {
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
   }
 
   public String getFilename() {

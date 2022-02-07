@@ -3,6 +3,8 @@ package cloudcomputing.accessmonitor.service.impl;
 import static cloudcomputing.accessmonitor.constants.UnauthorizedManagerConstants.UNAUTHORIZED_MNG_ACCESS_KEY;
 import static cloudcomputing.accessmonitor.constants.UnauthorizedManagerConstants.UNAUTHORIZED_MNG_ENDPOINT;
 import static cloudcomputing.accessmonitor.constants.UnauthorizedManagerConstants.X_FUNCTIONS_KEY_HEADER;
+import static cloudcomputing.accessmonitor.service.JsonParserService.fromJson;
+import static cloudcomputing.accessmonitor.service.JsonParserService.toJson;
 
 import cloudcomputing.accessmonitor.exception.RollbackBlobException;
 import cloudcomputing.accessmonitor.model.persistence.AuthorizedDetection;
@@ -12,9 +14,9 @@ import cloudcomputing.accessmonitor.service.FaceAPIService;
 import cloudcomputing.accessmonitor.service.PersistenceServiceAuthorizedMembers;
 import cloudcomputing.accessmonitor.service.PersistenceServiceUnauthorizedMembers;
 import com.azure.cosmos.models.CosmosItemResponse;
-import com.google.gson.Gson;
 import com.microsoft.azure.cognitiveservices.vision.faceapi.models.IdentifyCandidate;
 import com.microsoft.azure.cognitiveservices.vision.faceapi.models.IdentifyResult;
+import com.microsoft.azure.cognitiveservices.vision.faceapi.models.Person;
 import com.microsoft.azure.cognitiveservices.vision.faceapi.models.VerifyResult;
 import java.io.IOException;
 import java.net.URI;
@@ -66,7 +68,7 @@ public class DetectionServiceImpl implements DetectionService {
           notifiedDetection.getFaceId(), notifiedDetection.getId()));
 
         HttpResponse<String> verifyResponse = faceAPIService.faceVerify(notifiedDetection.getFaceId(), faceId);
-        return new Gson().fromJson(verifyResponse.body(), VerifyResult.class).isIdentical();
+        return fromJson(verifyResponse.body(), VerifyResult.class).isIdentical();
       }).filter(identical -> identical).findAny();
 
       unauthorizedDetection =
@@ -87,9 +89,12 @@ public class DetectionServiceImpl implements DetectionService {
 
   private void registerAuthorizedDetection(IdentifyResult identifyResult, IdentifyCandidate candidate, String filename,
     Logger logger) {
+    HttpResponse<String> getPersonResponse = faceAPIService.getPerson(candidate.personId().toString());
+    Person person = fromJson(getPersonResponse.body(), Person.class);
+
     AuthorizedDetection actualDetection =
       new AuthorizedDetection(identifyResult.faceId().toString(), candidate.personId().toString(), candidate.confidence(),
-        LocalDateTime.now(ZoneOffset.UTC), filename);
+        LocalDateTime.now(ZoneOffset.UTC), filename, person.name());
 
     persistenceServiceAuthorizedMembers.lastDetectionByPersonID(actualDetection.getPersonId())
       .stream()
@@ -124,7 +129,7 @@ public class DetectionServiceImpl implements DetectionService {
     try {
       HttpRequest httpRequest = HttpRequest.newBuilder(URI.create(UNAUTHORIZED_MNG_ENDPOINT))
         .header(X_FUNCTIONS_KEY_HEADER, UNAUTHORIZED_MNG_ACCESS_KEY)
-        .POST(BodyPublishers.ofString(new Gson().toJson(unauthorizedDetection)))
+        .POST(BodyPublishers.ofString(toJson(unauthorizedDetection)))
         .build();
       httpClient.send(httpRequest, BodyHandlers.ofString());
     } catch (IOException | InterruptedException e) {

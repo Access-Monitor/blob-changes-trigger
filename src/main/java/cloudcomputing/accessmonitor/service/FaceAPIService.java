@@ -10,4 +10,6 @@ public interface FaceAPIService {
   HttpResponse<String> faceIdentify(String[] detectedFaceIds);
 
   HttpResponse<String> faceVerify(String faceId1, String faceId2);
+
+  HttpResponse<String> getPerson(String personId);
 }

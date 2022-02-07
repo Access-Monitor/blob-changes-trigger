@@ -2,6 +2,7 @@ package cloudcomputing.accessmonitor;
 
 import static cloudcomputing.accessmonitor.constants.HttpConstants.SUCCESS;
 import static cloudcomputing.accessmonitor.constants.StorageConstants.ACCESSMONITORBLOB_CONTAINER;
+import static cloudcomputing.accessmonitor.service.JsonParserService.fromJson;
 
 import cloudcomputing.accessmonitor.exception.RollbackBlobException;
 import cloudcomputing.accessmonitor.service.BlobStorageService;
@@ -11,7 +12,6 @@ import cloudcomputing.accessmonitor.service.impl.BlobStorageServiceImpl;
 import cloudcomputing.accessmonitor.service.impl.DetectionServiceImpl;
 import cloudcomputing.accessmonitor.service.impl.FaceAPIServiceImpl;
 import com.azure.core.http.rest.Response;
-import com.google.gson.Gson;
 import com.microsoft.azure.cognitiveservices.vision.faceapi.models.DetectedFace;
 import com.microsoft.azure.cognitiveservices.vision.faceapi.models.IdentifyResult;
 import com.microsoft.azure.functions.ExecutionContext;
@@ -42,7 +42,7 @@ public class BlobTriggerFunction {
     try {
       HttpResponse<String> detectFaceHttpResponse = faceAPIService.faceDetect(blobContent);
       if (detectFaceHttpResponse.statusCode() == SUCCESS) {
-        DetectedFace[] detectedFaces = new Gson().fromJson(detectFaceHttpResponse.body(), DetectedFace[].class);
+        DetectedFace[] detectedFaces = fromJson(detectFaceHttpResponse.body(), DetectedFace[].class);
         logger.info(String.format("Detected faces from blob: %s", Arrays.toString(detectedFaces)));
 
         if (ArrayUtils.isNotEmpty(detectedFaces)) {
@@ -50,7 +50,7 @@ public class BlobTriggerFunction {
           logger.info(String.format("Detected face IDs: %s", Arrays.toString(detectedFaceIds)));
 
           HttpResponse<String> identifyHttpResponse = faceAPIService.faceIdentify(detectedFaceIds);
-          IdentifyResult[] identifyResults = new Gson().fromJson(identifyHttpResponse.body(), IdentifyResult[].class);
+          IdentifyResult[] identifyResults = fromJson(identifyHttpResponse.body(), IdentifyResult[].class);
           logger.info(String.format("Identification results: %s", Arrays.toString(identifyResults)));
           Arrays.stream(identifyResults).forEach(identifyResult -> processIdentificationResults(identifyResult, filename, logger));
         } else {

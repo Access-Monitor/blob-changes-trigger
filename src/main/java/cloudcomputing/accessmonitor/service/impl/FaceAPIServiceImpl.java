@@ -2,16 +2,16 @@ package cloudcomputing.accessmonitor.service.impl;
 
 import static cloudcomputing.accessmonitor.constants.FaceAPIConstants.FACE_API_BASE_ENDPOINT;
 import static cloudcomputing.accessmonitor.constants.FaceAPIConstants.FACE_API_SUBSCRIPTION_KEY;
-import static cloudcomputing.accessmonitor.constants.FaceAPIConstants.TEST_PERSON_GROUP;
+import static cloudcomputing.accessmonitor.constants.FaceAPIConstants.PERSON_GROUP_NAME;
 import static cloudcomputing.accessmonitor.constants.HttpConstants.APPLICATION_OCTET_STREAM;
 import static cloudcomputing.accessmonitor.constants.HttpConstants.CONTENT_TYPE_HEADER;
 import static cloudcomputing.accessmonitor.constants.HttpConstants.OCP_APIM_SUBSCRIPTION_KEY_HEADER;
+import static cloudcomputing.accessmonitor.service.JsonParserService.toJson;
 
 import cloudcomputing.accessmonitor.exception.RollbackBlobException;
 import cloudcomputing.accessmonitor.model.api.FaceIdentifyRequestBody;
 import cloudcomputing.accessmonitor.model.api.FaceVerifyRequestBody;
 import cloudcomputing.accessmonitor.service.FaceAPIService;
-import com.google.gson.Gson;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -43,8 +43,8 @@ public class FaceAPIServiceImpl implements FaceAPIService {
   public HttpResponse<String> faceIdentify(String[] detectedFaceIds) {
     if (ArrayUtils.isNotEmpty(detectedFaceIds)) {
       try {
-        FaceIdentifyRequestBody faceIdentifyRequestBody = new FaceIdentifyRequestBody(detectedFaceIds, 1, TEST_PERSON_GROUP);
-        String faceIdentifyRequestBodyJSON = new Gson().toJson(faceIdentifyRequestBody, FaceIdentifyRequestBody.class);
+        FaceIdentifyRequestBody faceIdentifyRequestBody = new FaceIdentifyRequestBody(detectedFaceIds, 1, PERSON_GROUP_NAME);
+        String faceIdentifyRequestBodyJSON = toJson(faceIdentifyRequestBody);
         HttpRequest httpRequest = buildBaseFaceAPIHttpRequest(FACE_API_BASE_ENDPOINT + "/face/v1.0/identify").POST(
           BodyPublishers.ofString(faceIdentifyRequestBodyJSON)).build();
         return httpClient.send(httpRequest, BodyHandlers.ofString());
@@ -61,7 +61,19 @@ public class FaceAPIServiceImpl implements FaceAPIService {
     try {
       FaceVerifyRequestBody faceVerifyRequestBody = new FaceVerifyRequestBody(faceId1, faceId2);
       HttpRequest httpRequest = buildBaseFaceAPIHttpRequest(FACE_API_BASE_ENDPOINT + "/face/v1.0/verify").POST(
-        BodyPublishers.ofString(new Gson().toJson(faceVerifyRequestBody, FaceVerifyRequestBody.class))).build();
+        BodyPublishers.ofString(toJson(faceVerifyRequestBody))).build();
+      return httpClient.send(httpRequest, BodyHandlers.ofString());
+    } catch (IOException | InterruptedException e) {
+      e.printStackTrace();
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public HttpResponse<String> getPerson(String personId) {
+    try {
+      HttpRequest httpRequest = buildBaseFaceAPIHttpRequest(
+        FACE_API_BASE_ENDPOINT + String.format("/face/v1.0/persongroups/%s/persons/%s", PERSON_GROUP_NAME, personId)).GET().build();
       return httpClient.send(httpRequest, BodyHandlers.ofString());
     } catch (IOException | InterruptedException e) {
       e.printStackTrace();
