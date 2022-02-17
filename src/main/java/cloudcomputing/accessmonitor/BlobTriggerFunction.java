@@ -56,7 +56,8 @@ public class BlobTriggerFunction {
             Arrays.stream(identifyResults)
               .forEach(identifyResult -> processIdentificationResults(identifyResult, filename, logger));
           } else {
-            logger.info(String.format("Error during identification - response status: %s", identifyHttpResponse.statusCode()));
+            logger.info(String.format("Error during identification - response: %s , %s", identifyHttpResponse.statusCode(),
+              identifyHttpResponse.body()));
             throw new RollbackBlobException();
           }
         } else {
