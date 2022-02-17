@@ -50,9 +50,15 @@ public class BlobTriggerFunction {
           logger.info(String.format("Detected face IDs: %s", Arrays.toString(detectedFaceIds)));
 
           HttpResponse<String> identifyHttpResponse = faceAPIService.faceIdentify(detectedFaceIds);
-          IdentifyResult[] identifyResults = fromJson(identifyHttpResponse.body(), IdentifyResult[].class);
-          logger.info(String.format("Identification results: %s", Arrays.toString(identifyResults)));
-          Arrays.stream(identifyResults).forEach(identifyResult -> processIdentificationResults(identifyResult, filename, logger));
+          if (identifyHttpResponse.statusCode() == SUCCESS) {
+            IdentifyResult[] identifyResults = fromJson(identifyHttpResponse.body(), IdentifyResult[].class);
+            logger.info(String.format("Identification results: %s", Arrays.toString(identifyResults)));
+            Arrays.stream(identifyResults)
+              .forEach(identifyResult -> processIdentificationResults(identifyResult, filename, logger));
+          } else {
+            logger.info(String.format("Error during identification - response status: %s", identifyHttpResponse.statusCode()));
+            throw new RollbackBlobException();
+          }
         } else {
           logger.info("No faces detected from blob");
           throw new RollbackBlobException();
